@@ -16,6 +16,7 @@ namespace LectorDePagos.Controller
         private static string nombre = "";
         private static string ruta = Config.resultPath;
         private static XmlDocument xml = new XmlDocument();
+
         /// <summary>
         /// Lee un archivo de complementos de pago para su posterior tratamiento
         /// </summary>
@@ -28,7 +29,7 @@ namespace LectorDePagos.Controller
             int numLinea2 = 0;
             bool finalArchivo = false;
             string[] lineaSplit = null;
-            string[] registro = new string[18];
+            List<string[]> registros = new List<string[]>();
 
             using (StreamReader reader = new StreamReader(archivo))
             {
@@ -47,23 +48,25 @@ namespace LectorDePagos.Controller
                             if (linea.Contains("|"))
                             {
                                 lineaSplit = linea.Split('|');
-                                for (int i = 1; i < lineaSplit.Length - 1; i++)
-                                {
-                                    lineaSplit[i] = Regex.Replace(lineaSplit[i], " ", "");
-                                    registro[i - 1] = lineaSplit[i];
-                                }
+                                lineaSplit = AjustarArray(lineaSplit);
 
-                                if (Regex.IsMatch(registro[16], pattern))
+                                string val1 = lineaSplit[6];
+                                if (Regex.IsMatch(lineaSplit[16], pattern))
                                 {
-                                    if (DocNum != registro[16])
+                                    if (DocNum != lineaSplit[16])
                                     {
-                                        DocNum = registro[16];
-                                        nombre = registro[0] + "_" + registro[16];
-                                        CrearXML(ruta + "\\" + nombre + ".xml", "ComplementoDePagos");
+                                        DocNum = lineaSplit[16];
+                                        if (registros.Count > 0) RevisarBloque(registros, false);
+                                        registros.Clear();
                                     }
-                                    EscribirXML(registro, ruta + "\\" + nombre + ".xml", "ComplementoDePagos");
+                                    registros.Add(lineaSplit);
                                     numLinea2 += 1;
                                 }
+                            }
+                            else if (registros.Count > 0)
+                            {
+                                RevisarBloque(registros, false);
+                                registros.Clear();
                             }
                         }
                         numLinea += 1;
@@ -73,9 +76,56 @@ namespace LectorDePagos.Controller
                         Logger.WriteLog("Error: " + ex.Message);
                     }
                 }
-                Logger.WriteLog("Numero de lineas Leidas: " + numLinea + "\r\nNumero de lineas Escritas: " + numLinea2);
+                Logger.WriteLog("Numero de lineas Leidas: " + numLinea + "\r\nNumero de lineas Procesadas: " + numLinea2);
             }
             return finalArchivo;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lineaSplit"></param>
+        /// <returns></returns>
+        private static string[] AjustarArray(string[] lineaSplit)
+        {
+            string[] registro = new string[18];
+            for (int i = 1; i < lineaSplit.Length - 1; i++)
+            {
+                lineaSplit[i] = Regex.Replace(lineaSplit[i], " ", "");
+                registro[i - 1] = lineaSplit[i];
+            }
+            return registro;
+        }
+
+        /// <summary>
+        /// Revisa un bloque de registro con el mismo Numero de Documento (Clrng doc.) y evalua si debe o no crear un archivo para dicho bloque
+        /// </summary>
+        /// <param name="bloque">Lista con registros a revisar para la creación o no de un documento Xml</param>
+        /// <param name="bandera">bandera para saber si crear un nuevo documento o solo añadirle datos a uno existente</param>
+        private static void RevisarBloque(List<string[]> bloque, bool bandera)
+        {
+            foreach (var item in bloque)
+            {
+                nombre = "\\" + item[0] + "_" + item[16] + ".xml";
+                switch (bandera)
+                {
+                    case true:
+                        if (item[6] == "RV" || item[6] == "DR" || item[6] == "XD")
+                        {
+                            EscribirXML(item, ruta + nombre, true);
+                        }
+                        break;
+                    case false:
+                        if (item[6] == "DZ")
+                        {
+                            contador += 1;
+                            CrearXML(ruta + nombre, "CFDPago");
+                            EscribirXML(item, ruta + nombre, false);
+                            RevisarBloque(bloque, true);
+                        }
+                        break;
+                }
+            } 
         }
 
         /// <summary>
@@ -103,34 +153,70 @@ namespace LectorDePagos.Controller
         /// Crea un documento xml con los parametros pasados por la lectura del archivo txt original
         /// </summary>
         /// <param name="registro">nombre que tendrá el nuevo xml a crear</param>
-        private static void EscribirXML(string[] registro, string rutaArchivo, string nodoRaiz)
+        private static void EscribirXML(string[] registro, string rutaArchivo, bool bandera)
         {
             xml.Load(rutaArchivo);
-            XmlNode pago = CrearNodo(registro);
+            XmlNode pago = CrearNodo(registro, bandera);
             XmlNode root = xml.DocumentElement;
             root.InsertAfter(pago, root.LastChild);
             xml.Save(rutaArchivo);
         }
         
 
-        private static XmlNode CrearNodo(string[] reg)
+        private static XmlNode CrearNodo(string[] reg, bool bandera)
         {
-            string[] nombreAtributo = new string[] 
+            XmlElement nodo = null;
+            XmlAttribute attrib;
+            string[] nombreAtributo;
+            string[] atributo;
+            int i = 0;
+
+            switch (bandera)
+            {
+                case true: // Cuando se es RV, DR, o XD
+                    nodo = xml.CreateElement("DocReference");
+                    nombreAtributo = new string[] { "Folio", "ImpPagado" };
+                    atributo = new string[] { reg[4], reg[12] };
+                    foreach (var item in nombreAtributo)
+                    {
+                        attrib = xml.CreateAttribute(item);
+                        attrib.Value = atributo[i];
+                        nodo.SetAttributeNode(attrib);
+                        i += 1;
+                    }
+                    i = 0;
+                    break;
+                case false: // Cuando se es DZ
+                    string val = "";
+                    if (reg[13] == "USD") val = OpTipoCambio(reg[11], reg[12]); 
+                    nodo = xml.CreateElement("Pago");
+                    nombreAtributo = new string[] { "Account", "FechaPago", "Monto", "MonedaP", "PaymentReference", "FormaDePagoP", "NumOperacion" };
+                    atributo = new string[] { reg[0], reg[2], reg[11], reg[13], reg[4], "03", reg[16] };
+                    foreach (var item in nombreAtributo)
+                    {
+                        attrib = xml.CreateAttribute(item);
+                        attrib.Value = atributo[i];
+                        nodo.SetAttributeNode(attrib);
+                        i += 1;
+                    }
+                    i = 0;
+                    break;
+            }
+            /*
+            nombreAtributo = new string[] 
             {
                 "Account", "Assignment", "Pmnt_date", "St", "Reference", "PBk", "Typ", "DocumentNo", "Doc..Date",
                 "S", "DD", "Amount_in_DC", "Amt_in_loc_cur", "Curr", "LCu", "Text", "Clrng_doc", "User_Name"
             };
-            XmlElement pago = xml.CreateElement("Pago");
-            XmlAttribute attrib;
-            int i = 0;
-            foreach (var item in reg)
-            {
-                attrib = xml.CreateAttribute(nombreAtributo[i]);
-                attrib.Value = reg[i];
-                pago.SetAttributeNode(attrib);
-                i += 1;
-            }
-            return pago;
+            */
+            return nodo;
+        }
+        private static string OpTipoCambio(string moneda, string tipoCambio)
+        {
+            int mnac = Convert.ToInt32(moneda);
+            int mint = Convert.ToInt32(tipoCambio);
+            int result = mnac / mint;
+            return result.ToString();
         }
     }
 }

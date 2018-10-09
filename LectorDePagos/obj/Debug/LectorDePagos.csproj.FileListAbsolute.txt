@@ -3,4 +3,3 @@ C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\LectorDePagos\Lector
 C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\LectorDePagos\LectorDePagos\bin\Debug\LectorDePagos.pdb
 C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\LectorDePagos\LectorDePagos\obj\Debug\LectorDePagos.exe
 C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\LectorDePagos\LectorDePagos\obj\Debug\LectorDePagos.pdb
-C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\LectorDePagos\LectorDePagos\obj\Debug\LectorDePagos.csprojResolveAssemblyReference.cache

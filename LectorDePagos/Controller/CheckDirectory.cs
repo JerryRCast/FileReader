@@ -23,6 +23,7 @@ namespace LectorDePagos.Controller
                 if (archivoFinalizado)
                 {
                     finalPath = path + "\\Ok\\" + file.Name;
+
                     file.MoveTo(finalPath);
                 }
                 else
