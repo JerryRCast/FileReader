@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controller\CheckDirectory.cs" />
     <Compile Include="Controller\Config.cs" />
     <Compile Include="Controller\Logger.cs" />
     <Compile Include="Controller\TreatFile.cs" />

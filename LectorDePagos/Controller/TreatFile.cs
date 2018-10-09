@@ -20,7 +20,7 @@ namespace LectorDePagos.Controller
         /// Lee un archivo de complementos de pago para su posterior tratamiento
         /// </summary>
         /// <param name="file">Archivo a procesar</param>
-        public static void LeerArchivo(string archivo)
+        public static bool LeerArchivo(string archivo)
         {
             string pattern = "([0-9])\\w+";
             string linea = null;
@@ -41,8 +41,6 @@ namespace LectorDePagos.Controller
                         {
                             Logger.WriteLog("\r\nLa bandera de [finalArchivo] ha cambiado de False a " +
                             finalArchivo + ". Se llego al final del archivo...");
-                            /*Console.WriteLine("\r\nLa bandera de [finalArchivo] ha cambiado de False a " +
-                            finalArchivo + ". Se llego al final del archivo...");*/
                         }
                         else
                         {
@@ -60,7 +58,7 @@ namespace LectorDePagos.Controller
                                     if (DocNum != registro[16])
                                     {
                                         DocNum = registro[16];
-                                        nombre = registro[0];
+                                        nombre = registro[0] + "_" + registro[16];
                                         CrearXML(ruta + "\\" + nombre + ".xml", "ComplementoDePagos");
                                     }
                                     EscribirXML(registro, ruta + "\\" + nombre + ".xml", "ComplementoDePagos");
@@ -72,13 +70,12 @@ namespace LectorDePagos.Controller
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message);
+                        Logger.WriteLog("Error: " + ex.Message);
                     }
                 }
                 Logger.WriteLog("Numero de lineas Leidas: " + numLinea + "\r\nNumero de lineas Escritas: " + numLinea2);
-                //Console.WriteLine("Numero de lineas Leidas: " + numLinea);
-                //Console.WriteLine("Numero de lineas Escritas: " + numLinea2);
             }
+            return finalArchivo;
         }
 
         /// <summary>
@@ -86,7 +83,7 @@ namespace LectorDePagos.Controller
         /// </summary>
         /// <param name="rutaArchivo">Ruta del archivo Xml que se creará</param>
         /// <param name="nodoRaiz">Nodo raíz desde donde se comenzarán a agregar los diferentes nodos hijos</param>
-        public static void CrearXML(string rutaArchivo, string nodoRaiz)
+        private static void CrearXML(string rutaArchivo, string nodoRaiz)
         {
             if (!File.Exists(rutaArchivo))
             {
@@ -106,7 +103,7 @@ namespace LectorDePagos.Controller
         /// Crea un documento xml con los parametros pasados por la lectura del archivo txt original
         /// </summary>
         /// <param name="registro">nombre que tendrá el nuevo xml a crear</param>
-        public static void EscribirXML(string[] registro, string rutaArchivo, string nodoRaiz)
+        private static void EscribirXML(string[] registro, string rutaArchivo, string nodoRaiz)
         {
             xml.Load(rutaArchivo);
             XmlNode pago = CrearNodo(registro);

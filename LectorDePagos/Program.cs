@@ -14,9 +14,11 @@ namespace LectorDePagos
         {
             Config.ReadConfig();
             string path = Config.readPath;
-            Logger.WriteLog("Comenzando lectura del archivo: " + Path.GetFileName(path));
-            Logger.WriteLog("en la ruta " + Path.GetDirectoryName(path) + "\r\n");
-            TreatFile.LeerArchivo(path);
+            Logger.WriteLog("------------------------------------------------------------------------------------->>>");
+            Logger.WriteLog("Proceso iniciado con fecha de " + DateTime.Now + "\r\nComenzando barrido de archivos...");
+            //TreatFile.LeerArchivo(path);
+            CheckDirectory.ObtenerArchivos(path);
+            Logger.WriteLog("Terminando proceso.\r\n");
             //Console.Read();
         }
     }
