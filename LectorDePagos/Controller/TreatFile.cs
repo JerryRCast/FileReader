@@ -174,9 +174,9 @@ namespace LectorDePagos.Controller
             switch (bandera)
             {
                 case true: // Cuando se es RV, DR, o XD
-                    nodo = xml.CreateElement("DocReference");
+                    nodo = xml.CreateElement("DoctoRelacionado");
                     nombreAtributo = new string[] { "Folio", "ImpPagado" };
-                    atributo = new string[] { reg[4], reg[12] };
+                    atributo = new string[] { reg[4], Regex.Replace(reg[12],"([,-])","") };
                     foreach (var item in nombreAtributo)
                     {
                         attrib = xml.CreateAttribute(item);
