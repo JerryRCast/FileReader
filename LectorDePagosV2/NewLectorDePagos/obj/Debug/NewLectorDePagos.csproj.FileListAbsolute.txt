@@ -1,0 +1,5 @@
+C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\NewLectorDePagos\NewLectorDePagos\bin\Debug\NewLectorDePagos.exe.config
+C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\NewLectorDePagos\NewLectorDePagos\bin\Debug\NewLectorDePagos.exe
+C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\NewLectorDePagos\NewLectorDePagos\bin\Debug\NewLectorDePagos.pdb
+C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\NewLectorDePagos\NewLectorDePagos\obj\Debug\NewLectorDePagos.exe
+C:\Users\gerardo.rios\Documents\Visual Studio 2015\Projects\NewLectorDePagos\NewLectorDePagos\obj\Debug\NewLectorDePagos.pdb
